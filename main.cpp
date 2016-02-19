@@ -12,13 +12,17 @@ void funReshape(int w, int h);
 void funDisplay();
 void drawTriangulo(GLfloat s, char color);
 void funKeyboard(int key, int x, int y);
+void funMouse(int key, int state, int x, int y);
+void funMotion(int x, int y);
 void drawNumber();
 void drawSphere(GLfloat radius, char color, bool wired = true);
 void drawPieza(GLfloat width, GLfloat height);
+void drawCube();
 
 // Variables globales
-GLfloat desZ = -5.0, rotY = 0.0;
+GLfloat desZ = -5.0, rotY = 0.0, rotX = 0.0;
 
+int oldX = 0, oldY = 0;
 
 int main(int argc, char** argv) {
 
@@ -38,6 +42,8 @@ int main(int argc, char** argv) {
     glutReshapeFunc(funReshape);
     glutDisplayFunc(funDisplay);
     glutSpecialFunc(funKeyboard);
+    glutMouseFunc(funMouse);
+    glutMotionFunc(funMotion);
 
     // Bucle principal
     glutMainLoop();
@@ -60,8 +66,11 @@ void initFunc() {
     // Configuracion de parametros fijos
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_POLYGON_OFFSET_FILL);
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
     glPolygonOffset(1.0, 1.0);
     glShadeModel(GL_FLAT);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 
 }
@@ -74,17 +83,17 @@ void funReshape(int w, int h) {
     // Configuracion del modelo de proyeccion (P)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60.0, (GLfloat)w / (GLfloat)h, 0.1, 30.0);
+    gluPerspective(60.0, (GLfloat)w / (GLfloat)h, 3.0, 50.0);
 }
 
 void funKeyboard(int key, int x, int y) {
 
     switch (key) {
     case GLUT_KEY_UP:
-        desZ = desZ - 0.1f;
+        rotX = rotX - 5.0f;
         break;
     case GLUT_KEY_DOWN:
-        desZ = desZ + 0.1f;
+        rotX = rotX + 5.0f;
         break;
     case GLUT_KEY_RIGHT:
         rotY = rotY + 5.0f;
@@ -95,7 +104,42 @@ void funKeyboard(int key, int x, int y) {
     default:
         desZ = -5.0f;
         rotY = 0.0f;
+        rotX = 0.0f;
+        break;
     }
+
+    glutPostRedisplay();
+}
+
+void funMouse(int key, int state, int x, int y)
+{
+    if (state == GLUT_UP)
+        return;
+
+    oldX = x;
+    oldY = y;
+    /*if (x > 1000 / 2.0f)
+        rotY += 5.0f;
+    else if (x < 1000 / 2.0f)
+        rotY -= 5.0f;
+
+    if (y > 500 / 2.0f)
+        rotX += 5.0f;
+    else if (y < 500.0f)
+        rotX -= 5.0f;
+
+    printf("x: %u, y: %u \n", x, y);*/
+}
+
+void funMotion(int x, int y)
+{
+    rotY -= float(oldX - x) / 10.0f;
+    rotX -= float(oldY - y) / 10.0f;
+
+    oldY = y;
+    oldX = x;
+    
+    printf("x: %d, y: %d \n", x, y);
 
     glutPostRedisplay();
 }
@@ -114,7 +158,7 @@ void funDisplay() {
     GLfloat initialDist = -2.0f;
 
     // Dibujamos los objetos (M)
-    glPushMatrix();
+    /*glPushMatrix();
     {
         glTranslatef(initialDist, 0.0, -8.0);
         glRotatef(rotY, 0.0, 1.0, 0.0);
@@ -151,13 +195,22 @@ void funDisplay() {
     }
     glPopMatrix();
 
-    /*glPushMatrix();
+    glPushMatrix();
     {
         glTranslatef(initialDist, 0.0, -8.0);
         glRotatef(rotY, 0.0, 1.0, 0.0);
         drawPieza(3.0f, 1.0f);
     }
     glPopMatrix();*/
+    
+    glPushMatrix();
+    {
+        glTranslatef(0.0, 0.0, -5.0);
+        glRotatef(rotY, 0.0, 1.0, 0.0);
+        glRotatef(rotX, 1.0, 0.0, 0.0);
+        drawCube();
+    }
+    glPopMatrix();
 
     // Intercambiamos los buffers
     glutSwapBuffers();
@@ -247,6 +300,74 @@ void drawPieza(GLfloat width, GLfloat height)
         glVertex3f(-width, -height, 0.0f);
         glVertex3f(-width, height, 0.0f);
         glVertex3f(width, height, 0.0f);
+    }
+    glEnd();
+}
+
+void drawCube()
+{
+    glLineWidth(1.0f);
+    glBegin(GL_TRIANGLES);
+    {
+        glColor3f(1.0f, 1.0f, 1.0f);
+
+        glVertex3f(1.0, 1.0, -1.0f);
+        glVertex3f(-1.0, -1.0, -1.0f);
+        glVertex3f(1.0, -1.0, -1.0f);
+
+        glVertex3f(-1.0, -1.0, -1.0f);
+        glVertex3f(1.0, 1.0, -1.0f);
+        glVertex3f(-1.0, 1.0, -1.0f);
+        
+        glColor3f(0.0f, 1.0f, 0.0f);
+
+        glVertex3f(1.0, 1.0, 1.0f);
+        glVertex3f(-1.0, -1.0, 1.0f);
+        glVertex3f(1.0, -1.0, 1.0f);
+        
+        glVertex3f(-1.0, -1.0, 1.0f);
+        glVertex3f(1.0, 1.0, 1.0f);
+        glVertex3f(-1.0, 1.0, 1.0f);
+        
+        glColor3f(1.0f, 0.0f, 0.0f);
+
+        glVertex3f(1.0, 1.0, -1.0f);
+        glVertex3f(1.0, -1.0, -1.0f);
+        glVertex3f(1.0, -1.0, 1.0f);
+        
+        glVertex3f(1.0, -1.0, 1.0f);
+        glVertex3f(1.0, 1.0, 1.0f);
+        glVertex3f(1.0, 1.0, -1.0f);
+        
+        glColor3f(0.0f, 0.0f, 1.0f);
+
+        glVertex3f(-1.0, 1.0, -1.0f);
+        glVertex3f(-1.0, -1.0, -1.0f);
+        glVertex3f(-1.0, -1.0, 1.0f);
+        
+        glVertex3f(-1.0, -1.0, 1.0f);
+        glVertex3f(-1.0, 1.0, 1.0f);
+        glVertex3f(-1.0, 1.0, -1.0f);
+        
+        glColor3f(0.5f, 0.5f, 1.0f);
+
+        glVertex3f(1.0, 1.0, -1.0f);
+        glVertex3f(-1.0, 1.0, 1.0f);
+        glVertex3f(-1.0, 1.0, -1.0f);
+        
+        glVertex3f(1.0, 1.0, 1.0f);
+        glVertex3f(-1.0, 1.0, 1.0f);
+        glVertex3f(1.0, 1.0, -1.0f);
+        
+        glColor3f(0.5f, 1.0f, 0.5f);
+
+        glVertex3f(1.0, -1.0, -1.0f);
+        glVertex3f(-1.0, -1.0, 1.0f);
+        glVertex3f(-1.0, -1.0, -1.0f);
+        
+        glVertex3f(1.0, -1.0, 1.0f);
+        glVertex3f(-1.0, -1.0, 1.0f);
+        glVertex3f(1.0, -1.0, -1.0f);
     }
     glEnd();
 }

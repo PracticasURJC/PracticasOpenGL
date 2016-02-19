@@ -14,13 +14,14 @@ void drawTriangulo(GLfloat s, char color);
 void funKeyboard(int key, int x, int y);
 void funMouse(int key, int state, int x, int y);
 void funMotion(int x, int y);
+void funMotionPassive(int x, int y);
 void drawNumber();
 void drawSphere(GLfloat radius, char color, bool wired = true);
 void drawPieza(GLfloat width, GLfloat height);
 void drawCube();
 
 // Variables globales
-GLfloat desZ = -5.0, rotY = 0.0, rotX = 0.0;
+GLfloat desZ = -5.0, rotY = 0.0, rotX = 0.0, posX = 0.0, posY = 0.0;
 
 int oldX = 0, oldY = 0;
 
@@ -44,6 +45,7 @@ int main(int argc, char** argv) {
     glutSpecialFunc(funKeyboard);
     glutMouseFunc(funMouse);
     glutMotionFunc(funMotion);
+    glutPassiveMotionFunc(funMotionPassive);
 
     // Bucle principal
     glutMainLoop();
@@ -131,7 +133,7 @@ void funMouse(int key, int state, int x, int y)
     printf("x: %u, y: %u \n", x, y);*/
 }
 
-void funMotion(int x, int y)
+void funMotionPassive(int x, int y)
 {
     rotY -= float(oldX - x) / 10.0f;
     rotX -= float(oldY - y) / 10.0f;
@@ -139,7 +141,20 @@ void funMotion(int x, int y)
     oldY = y;
     oldX = x;
     
-    printf("x: %d, y: %d \n", x, y);
+    printf("PASSIVE: x: %d, y: %d \n", x, y);
+
+    glutPostRedisplay();
+}
+
+void funMotion(int x, int y)
+{
+    posX -= float(oldX - x) / 100.0f;
+    posY += float(oldY - y) / 100.0f;
+
+    oldY = y;
+    oldX = x;
+
+    printf("MOTION: x: %d, y: %d \n", x, y);
 
     glutPostRedisplay();
 }
@@ -205,7 +220,7 @@ void funDisplay() {
     
     glPushMatrix();
     {
-        glTranslatef(0.0, 0.0, -5.0);
+        glTranslatef(posX, posY, -5.0);
         glRotatef(rotY, 0.0, 1.0, 0.0);
         glRotatef(rotX, 1.0, 0.0, 0.0);
         drawCube();
